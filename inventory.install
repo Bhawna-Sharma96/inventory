@@ -4,6 +4,7 @@
  * @file
  * Install, update and uninstall functions for the inventory module.
  */
+
 /**
  * Implements hook_schema().
  */
@@ -41,14 +42,14 @@
           'description' => 'Price field machine name',
           'translatable' => TRUE,
         ),
-        'modified_date' => array(
+        'last_updated' => array(
           'type' => 'varchar',
           'length' => 50,
           'not null' => TRUE,
           'default' => '',
           'description' => 'Last modified date and time',
           'translatable' => FALSE,
-        ),  
+        ) 
         ),
         'primary key' => array('inventory_id'),
         'unique keys' => 'content_type',
@@ -56,7 +57,7 @@
         'list' => array( 'content_type', 'unit_field' ),
         ),
     );
-return $schema;
+    return $schema;
 }
 
 /**

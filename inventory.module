@@ -27,7 +27,6 @@ function inventory_help($path, $arg) {
 /**
 * Implements hook_menu().
 */
-
 function inventory_menu() {
     $items['admin/inventory'] = array(
         'title' => 'Inventory',
@@ -40,14 +39,12 @@ function inventory_menu() {
         // the top corner of the window as a convenient "home link".
         'weight' => -15,
     );
-  
-return $items;
+    return $items;
 }
 
 /**
 * Admin form to config inventory settings
 */
-
 function inventory_config_form($form, &$form_state) {
     global $data_exists; 
     $table='inventory_config';   
@@ -60,7 +57,7 @@ function inventory_config_form($form, &$form_state) {
     
     if( !empty($data) ){
         $data_exists = TRUE;
-    }else {
+    } else {
         $data_exists = FALSE;
         $data = array(
             'content_type' => NULL,
@@ -97,7 +94,7 @@ function inventory_config_form($form, &$form_state) {
         '#value' => $data['price_field'],
         '#required' => TRUE,
     );
-      // Submit button
+    // Submit button
     $form['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Save settings'),
@@ -111,22 +108,22 @@ function inventory_config_form($form, &$form_state) {
  * Form submission handler for inventory configuration settings
  */
 function inventory_config_form_submit($form, &$form_state) {
-global $data_exists;
-$today = date("Y-m-d H:i:s");
-$data = array( 'content_type' => $form_state['input']['inventory_content_type'],
+    global $data_exists;
+    $today = date("Y-m-d H:i:s");
+    $data = array( 'content_type' => $form_state['input']['inventory_content_type'],
                 'unit_field' => $form_state['input']['inventory_unit_field'],
                 'price_field' => $form_state['input']['inventory_price_field'],
                 'last_updated' => $today
-        );
-// using drupal core function to insert/update record
-   if( $data_exists ){
-       // update data
-       db_update('inventory_config') // Table name 
+            );
+    // using drupal core function to insert/update record
+    if( $data_exists ){
+        // update data
+        db_update('inventory_config') // Table name 
           ->fields( $data )
            ->condition('inventory_id', 1, '=')
           ->execute();
-      // display message
-      drupal_set_message(t('The settings have been updated'));
+        // display message
+        drupal_set_message(t('The settings have been updated'));
     } else{
         // first time insert data
         drupal_write_record('inventory_config', $data);
@@ -135,6 +132,9 @@ $data = array( 'content_type' => $form_state['input']['inventory_content_type'],
     }
 }
 
+/**
+ * Custom validation for form submission
+ */
 function inventory_config_form_validate($form, &$form_state) {
     // Random example, if the title is 'test' throw an error
     if ($form_state['input']['inventory_content_type'] == NULL || $form_state['input']['inventory_content_type'] == '') {
