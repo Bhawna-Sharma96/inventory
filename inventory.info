@@ -1,0 +1,7 @@
+name = Inventory
+description = A module that provides inventory management for ecommerec websites.
+package = Inventory
+version = VERSION
+core = 7.x
+
+files[] = inventory.module
