@@ -113,9 +113,9 @@ function inventory_config_form($form, &$form_state) {
 function inventory_config_form_submit($form, &$form_state) {
 global $data_exists;
 $today = date("Y-m-d H:i:s");
-$data = array( 'content_type' => $form_state['values']['inventory_content_type'],
-                'unit_field' => $form_state['values']['inventory_unit_field'],
-                'price_field' => $form_state['values']['inventory_price_field'],
+$data = array( 'content_type' => $form_state['input']['inventory_content_type'],
+                'unit_field' => $form_state['input']['inventory_unit_field'],
+                'price_field' => $form_state['input']['inventory_price_field'],
                 'last_updated' => $today
         );
 // using drupal core function to insert/update record
@@ -127,7 +127,7 @@ $data = array( 'content_type' => $form_state['values']['inventory_content_type']
           ->execute();
       // display message
       drupal_set_message(t('The settings have been updated'));
-    }else{
+    } else{
         // first time insert data
         drupal_write_record('inventory_config', $data);
         // display message
@@ -137,13 +137,13 @@ $data = array( 'content_type' => $form_state['values']['inventory_content_type']
 
 function inventory_config_form_validate($form, &$form_state) {
     // Random example, if the title is 'test' throw an error
-    if ($form_state['values']['inventory_content_type'] == NULL || $form_state['values']['inventory_content_type'] == '') {
+    if ($form_state['input']['inventory_content_type'] == NULL || $form_state['input']['inventory_content_type'] == '') {
         form_set_error('inventory_content_type', 'Content Type cannot be blank!');
     }
-    if ($form_state['values']['inventory_unit_field'] == NULL || $form_state['values']['inventory_unit_field'] == '') {
+    if ($form_state['input']['inventory_unit_field'] == NULL || $form_state['input']['inventory_unit_field'] == '') {
         form_set_error('inventory_unit_field', 'Unit Field cannot be blank!');
     }
-    if ($form_state['values']['inventory_price_field'] == NULL || $form_state['values']['inventory_price_field'] == '') {
+    if ($form_state['input']['inventory_price_field'] == NULL || $form_state['input']['inventory_price_field'] == '') {
         form_set_error('inventory_price_field', 'Price Field cannot be blank!');
     }
 }
