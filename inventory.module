@@ -8,142 +8,193 @@
 /**
 * Implements hook_help().
 */
-global $data_exists;
-function inventory_help($path, $arg) {
-    switch ($path) {
-        case 'admin/help#inventory':
-        $output = '';
-        $output .= '<h3>' . t('About') . '</h3>';
-        $output .= '<p>' . t('The Inventory module provides a <a href="@inventory">Inventory page</a> in the administrative interface for managing inventory and tracking inventory within your site.', array('@inventory' => url('admin/inventory'))) . '</p>';
-        $output .= '<h3>' . t('Uses') . '</h3>';
-        $output .= '<dl>';
-        $output .= '<dt>' . t('Tracking inventory activity') . '</dt>';
-        $output .= '<dd>' . t('By enabling inventory admin can manage inventory at a centralized location.') . '</dd>';
-        $output .= '</dl>';
-        return $output;
-    }
+
+ function inventory_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#inventory':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Inventory module provides a <a href="@inventory">Inventory page</a> in the administrative interface for managing inventory and tracking inventory within your site.', array('@inventory' => url('admin/inventory'))) . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Tracking inventory activity') . '</dt>';
+      $output .= '<dd>' . t('By enabling inventory admin can manage inventory at a centralized location.') . '</dd>';
+      $output .= '</dl>';
+      return $output;
+  }
 }
 
 /**
 * Implements hook_menu().
 */
+
 function inventory_menu() {
-    $items['admin/inventory'] = array(
-        'title' => 'Inventory',
-        'description' => 'View and manage your inventory.',
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('inventory_config_form'),
-        'access arguments' => array('administer users'),
-        'type' => MENU_NORMAL_ITEM,
-        // Make this appear first, so for example, in admin menus, it shows up on
-        // the top corner of the window as a convenient "home link".
-        'weight' => -15,
-    );
-    return $items;
+  $items['admin/inventory'] = array(
+    'title' => 'Inventory',
+    'description' => 'View and manage your inventory.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('inventory_config_form'),
+    'access arguments' => array('administer users'),
+    'type' => MENU_NORMAL_ITEM,
+    // Make this appear first, so for example, in admin menus, it shows up on
+    // the top corner of the window as a convenient "home link".
+    'weight' => -15,
+  );
+  
+  return $items;
 }
 
 /**
 * Admin form to config inventory settings
 */
+
 function inventory_config_form($form, &$form_state) {
-    global $data_exists; 
-    $table='inventory_config';   
+    // to display exiting data for editable form
+    $table = 'inventory_config'; // without prefix  
     if( db_table_exists($table) ){
-        $data = db_select('inventory_config', 'i')
-            ->fields('i')
-            ->execute()
-            ->fetchAssoc();
+       $result = inventory_get_data($table);
+    }
+    if( empty($result) ){
+        $result = array( 'content_type' => NULL,
+                         'unit_field' => NULL,
+                         'price_field' => NULL,
+                    );
     }
     
-    if( !empty($data) ){
-        $data_exists = TRUE;
-    } else {
-        $data_exists = FALSE;
-        $data = array(
-            'content_type' => NULL,
-            'unit_field' => NULL,
-            'price_field' => NULL,
-        );
-    }
+    // inventory config form        
     $form['inventory_content_type'] = array(
-        '#type' => 'textfield',
-        '#title' => 'Content Type',
-        '#description' => t('Please enter machine name of content type.'),
-        '#size' => 40,
-        '#maxlength' => 50,
-        '#value' =>  $data['content_type'],
-        '#required' => TRUE,
-    );
-
+                                            '#type' => 'textfield',
+                                            '#title' => 'Content Type',
+                                            '#description' => t('Please enter machine name of content type.'),
+                                            '#size' => 40,
+                                            '#maxlength' => 50,
+                                            '#value' => $result['content_type'],
+                                            '#required' => TRUE,
+                                        );
+ 
     $form['inventory_unit_field'] = array(
-        '#type' => 'textfield',
-        '#title' => 'Unit Field',
-        '#description' => t('Please enter machine name of unit field.'),
-        '#size' => 40,
-        '#maxlength' => 50,
-        '#value' => $data['unit_field'],
-        '#required' => TRUE,
-    );
-
+                                            '#type' => 'textfield',
+                                            '#title' => 'Unit Field',
+                                            '#description' => t('Please enter machine name of unit field.'),
+                                            '#size' => 40,
+                                            '#maxlength' => 50,
+                                            '#value' => $result['unit_field'],
+                                            '#required' => TRUE,
+                                        );
+  
     $form['inventory_price_field'] = array(
-        '#type' => 'textfield',
-        '#title' => 'Price Field',
-        '#description' => t('Please enter machine name of price field.'),
-        '#size' => 40,
-        '#maxlength' => 50,
-        '#value' => $data['price_field'],
-        '#required' => TRUE,
-    );
+                                            '#type' => 'textfield',
+                                            '#title' => 'Price Field',
+                                            '#description' => t('Please enter machine name of price field.'),
+                                            '#size' => 40,
+                                            '#maxlength' => 50,
+                                            '#value' => $result['price_field'],
+                                            '#required' => TRUE,
+                                        );
     // Submit button
     $form['submit'] = array(
-        '#type' => 'submit',
-        '#value' => t('Save settings'),
-    );
-    // Save dat automatically to drupal variable table
-    // return system_settings_form($form);
-    return $form;
+                             '#type' => 'submit',
+                             '#value' => t('Save settings')
+                    );
+    //Delete button
+    $form['actions']['delete'] = array(
+    '#type' => 'button',
+    '#value' => t('Delete'),
+  );
+  // Save dat automatically to drupal variable table
+  //return system_settings_form($form);
+  
+  return $form;
+}
+
+/**
+*
+ * form validation
+ * 
+ */
+function inventory_config_form_validate($form, &$form_state){
+    
+    if ( empty($form_state['input']['inventory_content_type']) ) {
+        form_set_error('inventory_content_type', 'Content Type field is required!');
+    }
+    if ( empty($form_state['input']['inventory_unit_field']) ) {
+        form_set_error('inventory_unit_field', 'Unit field is required!');
+    }
+    if ( empty($form_state['input']['inventory_price_field']) ) {
+        form_set_error('inventory_price_field', 'Price field is required!');
+    }
 }
 
 /**
  * Form submission handler for inventory configuration settings
  */
 function inventory_config_form_submit($form, &$form_state) {
-    global $data_exists;
-    $today = date("Y-m-d H:i:s");
+    $table = 'inventory_config'; 
+    
+    $today = date("Y-m-d H:i:s");   
     $data = array( 'content_type' => $form_state['input']['inventory_content_type'],
-                'unit_field' => $form_state['input']['inventory_unit_field'],
-                'price_field' => $form_state['input']['inventory_price_field'],
-                'last_updated' => $today
-            );
-    // using drupal core function to insert/update record
-    if( $data_exists ){
+                   'unit_field' => $form_state['input']['inventory_unit_field'],
+                   'price_field' => $form_state['input']['inventory_price_field'],
+                   'last_updated' => $today
+                );
+    
+    $result = inventory_get_data($table);
+    
+    if( !empty( $result ) && !empty( $result['inventory_id'] ) ){
         // update data
-        db_update('inventory_config') // Table name 
-          ->fields( $data )
-           ->condition('inventory_id', 1, '=')
-          ->execute();
-        // display message
-        drupal_set_message(t('The settings have been updated'));
-    } else{
-        // first time insert data
-        drupal_write_record('inventory_config', $data);
-        // display message
-        drupal_set_message(t('The settings have been saved'));
+       inventory_update_data($table, $data, $result['inventory_id']);
+       
+    } else {
+       // insert data
+       inventory_insert_data($table, $data);
     }
 }
 
 /**
- * Custom validation for form submission
+ * using drupal core function to fetch data
  */
-function inventory_config_form_validate($form, &$form_state) {
-    // Random example, if the title is 'test' throw an error
-    if ($form_state['input']['inventory_content_type'] == NULL || $form_state['input']['inventory_content_type'] == '') {
-        form_set_error('inventory_content_type', 'Content Type cannot be blank!');
+function inventory_get_data($table){
+    if( !empty($table) ){
+        $result = db_select( $table, 'i')
+                    ->fields('i')
+                    ->execute()
+                    ->fetchAssoc();
+        return $result;
     }
-    if ($form_state['input']['inventory_unit_field'] == NULL || $form_state['input']['inventory_unit_field'] == '') {
-        form_set_error('inventory_unit_field', 'Unit Field cannot be blank!');
+}
+
+/**
+ * using drupal core function to insert data
+ */
+function inventory_insert_data($table, $data){
+    if( !empty($table) && !empty($data) ){
+     
+      drupal_write_record($table , $data);
+     
+      // display message
+     drupal_set_message(t('The settings have been saved'));
     }
-    if ($form_state['input']['inventory_price_field'] == NULL || $form_state['input']['inventory_price_field'] == '') {
-        form_set_error('inventory_price_field', 'Price Field cannot be blank!');
+}
+/**
+ *  using drupal core function to update data
+ */
+function inventory_update_data($table, $data, $inventory_id){
+   
+    if( !empty($table) && !empty($data) && !empty($inventory_id) ){
+        db_update($table) // Table name 
+            ->fields($data)
+            ->condition('inventory_id', $inventory_id , '=')
+            ->execute();
+        // display message
+        drupal_set_message(t('The settings have been updated'));
     }
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function Inventory_views_api($module, $api) {
+  if ($module == 'views' && $api == 'views_default') {
+    return array('version' => 2);
+  }
 }
