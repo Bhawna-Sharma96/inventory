@@ -1,7 +1,7 @@
 name = Inventory
-description = A module that provides inventory management for ecommerec websites.
+description = A module that provides inventory management for ecommerces websites.
 package = Inventory
 version = VERSION
 core = 7.x
-
+dependencies[] = views
 files[] = inventory.module

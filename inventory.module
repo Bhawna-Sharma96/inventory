@@ -38,6 +38,15 @@ function inventory_menu() {
         // the top corner of the window as a convenient "home link".
         'weight' => -15,
     );
+    $items['admin/inventory/dashboard'] = array(
+        'title' => 'Master Dashboard',
+        'page callback' => 'inventory_display_view',
+        'access arguments' => array('administer users'),
+        'type' => MENU_NORMAL_ITEM,
+        // Make this appear first, so for example, in admin menus, it shows up on
+        // the top corner of the window as a convenient "home link".
+        'weight' => -15,
+    );
     return $items;
 }
 
@@ -66,7 +75,7 @@ function inventory_config_form($form, &$form_state) {
                                             '#value' => $result['content_type'],
                                             '#required' => TRUE,
                                         );
- 
+
     $form['inventory_unit_field'] = array(
                                             '#type' => 'textfield',
                                             '#title' => 'Unit Field',
@@ -76,7 +85,7 @@ function inventory_config_form($form, &$form_state) {
                                             '#value' => $result['unit_field'],
                                             '#required' => TRUE,
                                         );
-  
+
     $form['inventory_price_field'] = array(
                                             '#type' => 'textfield',
                                             '#title' => 'Price Field',
@@ -91,9 +100,20 @@ function inventory_config_form($form, &$form_state) {
                             '#type' => 'submit',
                             '#value' => t('Save settings')
                     );
-    // Save dat automatically to drupal variable table
+    $form['submit'] = array(
+                            '#type' => 'submit',
+                            '#value' => t('Save settings')
+                    );
+    // Master Dashboard view button
+    $btn_type = ( !empty($result['content_type']) && !empty($result['unit_field']) && !empty($result['price_field']) ) ? 'link' : 'hidden';
+    $form['view_dash'] = array(
+                            '#title'=> 'Go to Master Dashboard ->',
+                            '#type' => $btn_type,
+                            '#value' => t('Master Dashboard'),
+                            '#href'=> 'admin/inventory/dashboard',
+                            );
+    //Save data automatically to drupal variable table
     //return system_settings_form($form);
-  
     return $form;
 }
 
@@ -156,7 +176,7 @@ function inventory_config_form_submit($form, &$form_state) {
         inventory_update_data($table, $data, $result['inventory_id']);
        
     } else {
-       // insert data
+        // insert data
         inventory_insert_data($table, $data);
     }
 }
@@ -164,7 +184,7 @@ function inventory_config_form_submit($form, &$form_state) {
 /**
  * using drupal core function to fetch data
  */
-function inventory_get_data($table){
+function inventory_get_data($table) {
     if( !empty($table) ){
         $result = db_select( $table, 'i')
                     ->fields('i')
@@ -177,26 +197,53 @@ function inventory_get_data($table){
 /**
  * using drupal core function to insert data
  */
-function inventory_insert_data($table, $data){
+function inventory_insert_data($table, $data) {
     if( !empty($table) && !empty($data) ){
-     
+
         drupal_write_record($table , $data);
-     
+
         // display message
-        drupal_set_message(t('The settings have been saved'));
+        drupal_set_message(t('The settings have been saved.'));
     }
 }
 
 /**
  *  using drupal core function to update data
  */
-function inventory_update_data($table, $data, $inventory_id){
+function inventory_update_data($table, $data, $inventory_id) {
     if( !empty($table) && !empty($data) && !empty($inventory_id) ){
         db_update($table) // Table name
             ->fields($data)
             ->condition('inventory_id', $inventory_id , '=')
             ->execute();
         // display message
-        drupal_set_message(t('The settings have been updated'));
+        drupal_set_message(t('The settings have been updated.'));
+    }
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function inventory_views_api($module, $api) {
+  if ($module == 'views' && $api == 'views_default') {
+    return array('version' => 2);
+  }
+}
+
+/**
+ * Implementing view for master-dashboard.
+ */
+function inventory_display_view() {
+    $msg= '<p> View not available! </p>';
+    $view_name= variable_get('inventory_view_master');
+    $view= views_get_view('master_dashboard');
+    if ($view = views_get_view($view_name) ) {
+        // Display the view master dashboard.
+      
+        $view->set_display('Master');
+        $view->pre_execute();
+        return $view->render('Master');
+    } else {
+        return $msg;
     }
 }
